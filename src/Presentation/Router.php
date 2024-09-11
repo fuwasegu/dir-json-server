@@ -25,6 +25,7 @@ class Router
 
         if ($method !== 'GET') {
             $this->response->setStatusCode(405);
+            $this->response->setContentType('application/json');
             $this->response->setContent(json_encode([
                 "status" => "error",
                 "message" => "Method Not Allowed"
@@ -35,6 +36,7 @@ class Router
 
         $useCase = new GetJsonResponse($this->fileSystem, $this->response);
         $useCase->execute($path);
+        $this->response->setContentType('application/json');
         $this->response->send();
     }
 
@@ -67,6 +69,7 @@ class Router
         $html .= "</ul></body></html>";
 
         $this->response->setStatusCode(200);
+        $this->response->setContentType('text/html');
         $this->response->setContent($html);
         $this->response->send();
     }
