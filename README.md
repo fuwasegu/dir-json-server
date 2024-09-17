@@ -7,7 +7,7 @@
 ## インストール
 
 ```: sh
-composer require fuwasegu/dir-json-server
+composer require --dev fuwasegu/dir-json-server
 ```
 
 ## 仕様
