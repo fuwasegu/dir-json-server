@@ -2,92 +2,100 @@
 
 namespace App\Presentation;
 
-use App\UseCase\GetJsonResponse;
 use App\Domain\FileSystem\FileSystemInterface;
 use App\Domain\Response\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
+use React\Http\Message\Response;
 
 class Router
 {
-    public function __construct(
-        private FileSystemInterface $fileSystem,
-        private ResponseInterface $response
-    ) {}
+    private $fileSystem;
+    private $response;
+    private $rootPath;
 
-    public function route(): void
+    public function __construct(FileSystemInterface $fileSystem, ResponseInterface $response, string $rootPath)
     {
-        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $method = strtoupper($_SERVER['REQUEST_METHOD']);
-
-        if ($path === '/') {
-            $this->showAvailableRoutes();
-            return;
-        }
-
-        if ($method !== 'GET') {
-            $this->response->setStatusCode(405);
-            $this->response->setContentType('application/json');
-            $this->response->setContent(json_encode([
-                "status" => "error",
-                "message" => "Method Not Allowed"
-            ]));
-            $this->response->send();
-            return;
-        }
-
-        $useCase = new GetJsonResponse($this->fileSystem, $this->response);
-        $useCase->execute($path);
-        $this->response->setContentType('application/json');
-        $this->response->send();
+        $this->fileSystem = $fileSystem;
+        $this->response = $response;
+        $this->rootPath = $rootPath;
     }
 
-    private function showAvailableRoutes(): void
+    public function route(ServerRequestInterface $request): PsrResponseInterface
     {
-        $routes = $this->getAvailableRoutes('contents');
-        $html = "<!DOCTYPE html>
-<html lang='ja'>
-<head>
-    <meta charset='UTF-8'>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <title>利用可能なルート</title>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
-        h1 { color: #333; }
-        ul { list-style-type: none; padding: 0; }
-        li { margin-bottom: 10px; }
-        a { color: #0066cc; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <h1>利用可能なルート</h1>
-    <ul>";
+        $path = $request->getUri()->getPath();
 
-        foreach ($routes as $route) {
-            $html .= "<li><a href='{$route}'>GET {$route}</a></li>";
+        if ($path === '/' || $path === '') {
+            return $this->handleRootPath();
         }
 
-        $html .= "</ul></body></html>";
+        $filePath = $this->rootPath . $path . '/response.json';
+        if ($this->fileSystem->exists($filePath)) {
+            $content = $this->fileSystem->read($filePath);
+            return $this->response->json(200, json_decode($content, true));
+        }
 
-        $this->response->setStatusCode(200);
-        $this->response->setContentType('text/html');
-        $this->response->setContent($html);
-        $this->response->send();
+        // 404エラー時のレスポンスを仕様に合わせて修正
+        return $this->response->json(404, [
+            'status' => 'error',
+            'message' => 'File not found',
+            'path' => $filePath
+        ]);
     }
 
-    private function getAvailableRoutes(string $dir, string $prefix = ''): array
+    private function handleRootPath(): PsrResponseInterface
     {
-        $routes = [];
-        $contents = $this->fileSystem->getDirectoryContents($dir);
+        $paths = $this->getAllPaths();
+        $html = $this->generateHtml($paths);
+        return new Response(
+            200,
+            ['Content-Type' => 'text/html'],
+            $html
+        );
+    }
 
-        foreach ($contents as $item) {
-            $path = "{$dir}/{$item}";
-            if (is_dir($path)) {
-                $routes = array_merge($routes, $this->getAvailableRoutes($path, "{$prefix}/{$item}"));
-            } elseif ($item === 'response.json') {
-                $routes[] = $prefix;
+    private function getAllPaths(): array
+    {
+        $paths = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($this->rootPath, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $file) {
+            if ($file->isFile() && $file->getFilename() === 'response.json') {
+                $relativePath = str_replace($this->rootPath, '', $file->getPath());
+                $relativePath = str_replace('\\', '/', $relativePath);
+                $paths[] = $relativePath;
             }
         }
 
-        return $routes;
+        return $paths;
+    }
+
+    private function generateHtml(array $paths): string
+    {
+        $listItems = array_map(function($path) {
+            return "<li><a href=\"{$path}\">{$path}</a></li>";
+        }, $paths);
+
+        $html = implode("\n", $listItems);
+
+        return <<<HTML
+        <!DOCTYPE html>
+        <html lang="ja">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>利用可能なAPI一覧</title>
+        </head>
+        <body>
+            <h1>利用可能なAPI一覧</h1>
+            <ul>
+                {$html}
+            </ul>
+        </body>
+        </html>
+        HTML;
     }
 }

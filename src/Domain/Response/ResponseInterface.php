@@ -2,10 +2,9 @@
 
 namespace App\Domain\Response;
 
+use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
+
 interface ResponseInterface
 {
-    public function setStatusCode(int $code): void;
-    public function setContent(string $content): void;
-    public function setContentType(string $contentType): void;
-    public function send(): void;
+    public function json(int $status, array $data): PsrResponseInterface;
 }

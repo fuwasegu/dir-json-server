@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+require __DIR__ . '/vendor/autoload.php';
+
+use App\Command\ServeCommand;
+
+$command = $argv[1] ?? '';
+
+if ($command === 'serve') {
+    (new ServeCommand())->run();
+} else {
+    echo "使用法: ./dir-json serve\n";
+    exit(1);
+}

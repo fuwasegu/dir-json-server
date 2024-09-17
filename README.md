@@ -6,7 +6,7 @@
 
 ## 仕様
 
-`contents/` に配置した JSON ファイルを API として公開します．
+`contents/` に配置した JSON ファイルを API として公開します．ただし，ルートディレクトリは後述の yaml ファイルで変更可能です．
 当該ディレクトリ直下が API のベースパスとなり，その直下に配置した JSON ファイルがそのままレスポンスとなります．
 
 JSON ファイルは，必ず `response.json` という名前で配置してください．
@@ -47,7 +47,7 @@ contents/
 
 つまり，
 
-- contents/ をルートとしてその直下が URL のパスとなる
+- contents/ をデフォルトのルートとしてその直下が URL のパスとなる
 - レスポンスにしたいデータを response.json として配置する
 - パスパラメータやクエリパラメータは利用できない
   - パスパラメータは，ディレクトリ名として配置することで実現できる
@@ -62,7 +62,7 @@ contents/
 ## サーバーの起動方法
 
 ```: sh
-php -S localhost:8000 public/index.php
+./dir-json serve
 ```
 
 ### 利用可能なルートの確認
@@ -84,6 +84,14 @@ localhost:8000 にブラウザからアクセスすると，利用可能なル�
   "message": "File not found",
   "path": "contents/users/2/profile/response.json"
 }
+```
+
+### デフォルトルートディレクトリの設定変更
+
+デフォルトのルートディレクトリは，`dir-json.yaml` ファイルで変更可能です．
+
+```: yaml
+root_path: 'contents'
 ```
 
 ## 設計
