@@ -14,10 +14,10 @@ class ServeCommand
     public function run(): void
     {
         $host = '127.0.0.1';
-        $port = 8000;
 
         $config = $this->loadConfig();
         $rootPath = $config['root_path'] ?? 'contents';
+        $port = $config['port'] ?? 8000;
 
         $server = new HttpServer(function (\Psr\Http\Message\ServerRequestInterface $request) use ($rootPath) {
             $fileSystem = new LocalFileSystem();
