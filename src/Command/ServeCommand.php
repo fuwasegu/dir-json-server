@@ -38,10 +38,23 @@ class ServeCommand
 
     private function loadConfig(): array
     {
-        $configFile = 'dir-json.yaml';
-        if (file_exists($configFile)) {
+        $configFile = $this->findConfigFile();
+        if ($configFile && file_exists($configFile)) {
             return Yaml::parseFile($configFile);
         }
         return [];
+    }
+
+    private function findConfigFile(): ?string
+    {
+        $currentDir = getcwd();
+        while ($currentDir !== '/') {
+            $configPath = $currentDir . '/dir-json.yaml';
+            if (file_exists($configPath)) {
+                return $configPath;
+            }
+            $currentDir = dirname($currentDir);
+        }
+        return null;
     }
 }

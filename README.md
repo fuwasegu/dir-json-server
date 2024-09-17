@@ -4,6 +4,12 @@
 返却したいレスポンスを JSON ファイルとして配置することで，
 その JSON ファイルを返却する API を簡単に公開することができます．
 
+## インストール
+
+```: sh
+composer require fuwasegu/dir-json-server
+```
+
 ## 仕様
 
 `contents/` に配置した JSON ファイルを API として公開します．ただし，ルートディレクトリは後述の yaml ファイルで変更可能です．

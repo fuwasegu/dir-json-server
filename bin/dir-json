@@ -1,0 +1,25 @@
+#!/usr/bin/env php
+<?php
+
+$autoloadPaths = [
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../../autoload.php',
+];
+
+foreach ($autoloadPaths as $file) {
+    if (file_exists($file)) {
+        require $file;
+        break;
+    }
+}
+
+use App\Command\ServeCommand;
+
+$command = $argv[1] ?? '';
+
+if ($command === 'serve') {
+    (new ServeCommand())->run();
+} else {
+    echo "使用法: dir-json serve\n";
+    exit(1);
+}

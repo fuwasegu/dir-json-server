@@ -2,7 +2,7 @@
     "name": "fuwasegu/dir-json-server",
     "description": "Directory JSON Server",
     "version": "1.0.0",
-    "type": "project",
+    "type": "library",
     "license": "MIT",
     "authors": [
         {
@@ -23,5 +23,5 @@
             "App\\": "src/"
         }
     },
-    "bin": ["dir-json"]
+    "bin": ["bin/dir-json"]
 }
