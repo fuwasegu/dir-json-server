@@ -1,7 +1,7 @@
 {
     "name": "fuwasegu/dir-json-server",
     "description": "Directory JSON Server",
-    "version": "1.0.0",
+    "version": "v1.0.0",
     "type": "library",
     "license": "MIT",
     "authors": [
